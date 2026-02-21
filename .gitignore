@@ -17,11 +17,13 @@ env/
 # Jupyter
 .ipynb_checkpoints/
 
-# Models (large binary files)
+# Models — ignore large weight files, keep READMEs
 *.joblib
 *.pkl
 *.pickle
-models/
+*.zip
+*.safetensors
+*.bin
 
 # Data (raw/processed CSVs can be large)
 data/raw/
