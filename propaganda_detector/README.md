@@ -44,23 +44,29 @@ print('Done')
 
 ---
 
-## Training
+## Getting the model
 
-The trained model weights are not stored in git (too large). You must train locally once.
+The trained model weights are not stored in git (too large). Use one of the options below.
 
-### Option A — Fast sklearn baseline (~30 seconds)
+### Option A — Download pre-trained model (recommended, ~2 min)
 
+```bash
+python download_model.py
+```
+
+This downloads the fine-tuned DistilBERT model (~235 MB) from GitHub Releases automatically.
+
+### Option B — Train from scratch
+
+**Fast sklearn baseline (~30 seconds)**
 ```bash
 python train.py --data data/raw/mbic.csv --compare --final-eval
 ```
 
-### Option B — DistilBERT (recommended, ~15-25 min on CPU)
-
+**DistilBERT fine-tuning (~15-25 min on CPU)**
 ```bash
 python train_transformer.py --data data/raw/mbic.csv --final-eval
 ```
-
-Both scripts save their model to `models/` automatically.
 
 ---
 
