@@ -1,0 +1,2 @@
+# propaganda-detector
+Datathon
