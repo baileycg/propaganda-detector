@@ -49,29 +49,29 @@ class PredictionResult:
     def __str__(self) -> str:
         bar_len = 30
         filled = int(self.confidence * bar_len)
-        bar = "█" * filled + "░" * (bar_len - filled)
+        bar = "#" * filled + "-" * (bar_len - filled)
 
         lines = [
             "",
-            "┌─────────────────────────────────────────────┐",
-            f"│  Label      : {self.label:<30}│",
-            f"│  Confidence : [{bar}] {self.confidence*100:.1f}%  │",
-            f"│  P(biased)  : {self.probability_biased:.4f}                           │",
-            "├─────────────────────────────────────────────┤",
-            "│  Top linguistic signals:                    │",
+            "+-----------------------------------------------+",
+            f"|  Label      : {self.label:<30} |",
+            f"|  Confidence : [{bar}] {self.confidence*100:.1f}%  |",
+            f"|  P(biased)  : {self.probability_biased:.4f}                            |",
+            "+-----------------------------------------------+",
+            "|  Top linguistic signals:                      |",
         ]
         for sig, val in self.signal_summary.items():
-            lines.append(f"│    {sig:<22} : {val:>6.4f}              │")
+            lines.append(f"|    {sig:<22} : {val:>6.4f}               |")
         if self.triggered_words:
             words_str = ", ".join(self.triggered_words[:8])
-            for chunk in textwrap.wrap(f"Triggered words: {words_str}", width=43):
-                lines.append(f"│  {chunk:<43}│")
+            for chunk in textwrap.wrap(f"Triggered words: {words_str}", width=45):
+                lines.append(f"|  {chunk:<45}|")
         if self.llm_summary:
-            lines.append("├─────────────────────────────────────────────┤")
-            lines.append("│  LLM Summary:                               │")
-            for chunk in textwrap.wrap(self.llm_summary, width=43):
-                lines.append(f"│  {chunk:<43}│")
-        lines.append("└─────────────────────────────────────────────┘")
+            lines.append("+-----------------------------------------------+")
+            lines.append("|  LLM Summary:                                 |")
+            for chunk in textwrap.wrap(self.llm_summary, width=45):
+                lines.append(f"|  {chunk:<45}|")
+        lines.append("+-----------------------------------------------+")
         return "\n".join(lines)
 
     def to_dict(self) -> dict:
