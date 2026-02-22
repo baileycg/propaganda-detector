@@ -10,16 +10,14 @@ Usage
 
 from __future__ import annotations
 
-import io
 import json
-import os
 import sys
 import urllib.request
 import zipfile
 from pathlib import Path
 
 REPO = "baileycg/propaganda-detector"
-MODEL_ZIP = "distilbert_model.zip"
+MODEL_ZIP = "distilbert_model_v2.zip"
 MODELS_DIR = Path(__file__).parent / "models"
 
 
@@ -52,7 +50,7 @@ def download_with_progress(url: str, dest: Path) -> None:
         downloaded = block_num * block_size
         if total_size > 0:
             pct = min(downloaded / total_size * 100, 100)
-            bar = "█" * int(pct // 2) + "░" * (50 - int(pct // 2))
+            bar = "#" * int(pct // 2) + "-" * (50 - int(pct // 2))
             mb_done = downloaded / 1024 / 1024
             mb_total = total_size / 1024 / 1024
             print(f"\r  [{bar}] {pct:.1f}%  {mb_done:.1f}/{mb_total:.1f} MB", end="", flush=True)
@@ -69,7 +67,7 @@ def extract_zip(zip_path: Path, dest_dir: Path) -> None:
 
 
 def main() -> None:
-    model_dir = MODELS_DIR / "distilbert_model"
+    model_dir = MODELS_DIR / "distilbert_model_v2" / "distilbert_model"
 
     if model_dir.exists() and (model_dir / "model.safetensors").exists():
         print(f"Model already exists at {model_dir}")
@@ -92,7 +90,7 @@ def main() -> None:
     zip_path.unlink()
     print(f"\nModel ready at: {model_dir}")
     print("Run predictions with:")
-    print('  PYTHONUTF8=1 python main.py --model-type transformer --text "your text here"')
+    print('  python main.py --model-type transformer --model distilbert_model_v2/distilbert_model --interactive')
 
 
 if __name__ == "__main__":
