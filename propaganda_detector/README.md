@@ -1,6 +1,6 @@
 # Propaganda / Media Bias Detector
 
-Detects propaganda and biased language in text, social media posts, or web articles using a fine-tuned **DistilBERT** model trained on the [MBIC dataset](https://github.com/Media-Bias-Group/Neural-Media-Bias-Detection-Using-Distant-Supervision-With-BABE) and augmented with the [PTC v2 corpus](https://propaganda.math.unipd.it/semeval2020task11/).
+Detects propaganda and biased language in text, social media posts, or web articles using a fine-tuned **DistilBERT** model trained on the [MBIC dataset](https://github.com/Media-Bias-Group/Neural-Media-Bias-Detection-Using-Distant-Supervision-With-BABE) and augmented with the [PTC v2 corpus](https://zenodo.org/records/3952415).
 
 ## Model performance (held-out MBIC test set)
 

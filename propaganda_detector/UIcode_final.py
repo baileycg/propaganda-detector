@@ -261,53 +261,59 @@ def ui_analyze(text: str):
 
 theme = gr.themes.Soft(primary_hue="blue", neutral_hue="slate")
 
-_LOADING_HTML = """
-<div id="model-status" style="
-    display:flex; align-items:center; gap:10px;
-    padding:8px 14px; border-radius:8px;
-    background:#f0f4ff; border:1px solid #c7d7f5;
-    font-size:14px; color:#334;">
-  <div style="
-      width:160px; height:8px; border-radius:4px;
-      background:#dde; overflow:hidden;">
-    <div style="
-        height:100%; width:40%; border-radius:4px;
-        background:#5b8dee;
-        animation: slide 1.2s ease-in-out infinite;">
-    </div>
-  </div>
-  <span>Initializing model...</span>
-</div>
-<style>
-@keyframes slide {
-  0%   { margin-left:-40%; }
-  100% { margin-left:100%; }
+_CSS = """
+@keyframes slide { 0% { margin-left:-40%; } 100% { margin-left:100%; } }
+@keyframes d1 { 0%,100%{opacity:0} 25%,75%{opacity:1} }
+@keyframes d2 { 0%,100%{opacity:0} 40%,75%{opacity:1} }
+@keyframes d3 { 0%,100%{opacity:0} 55%,75%{opacity:1} }
+@keyframes drawCheck {
+  0%   { stroke-dashoffset: 40; }
+  100% { stroke-dashoffset: 0; }
+}
+@keyframes svgFade {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
 }
 @keyframes fadeOut {
   0%   { opacity:1; max-height:60px; margin-bottom:8px; }
   70%  { opacity:1; }
   100% { opacity:0; max-height:0; margin-bottom:0; overflow:hidden; }
 }
-</style>
+"""
+
+_LOADING_HTML = """
+<div style="
+    display:flex; flex-direction:column; gap:6px;
+    padding:8px 14px; border-radius:8px;
+    background:#f0f4ff; border:1px solid #c7d7f5;
+    font-size:14px; color:#334;">
+  <span style="font-weight:bold;">
+    Loading<span style="animation:d1 1.5s infinite;opacity:0">.</span><span style="animation:d2 1.5s infinite;opacity:0">.</span><span style="animation:d3 1.5s infinite;opacity:0">.</span>
+  </span>
+  <div style="width:100%; height:8px; border-radius:4px; background:#dde; overflow:hidden;">
+    <div style="height:100%; width:40%; border-radius:4px; background:#5b8dee; animation:slide 1.2s ease-in-out infinite;"></div>
+  </div>
+</div>
 """
 
 _READY_HTML = """
 <div style="
-    display:flex; align-items:center; gap:10px;
+    display:flex; flex-direction:column; gap:6px;
     padding:8px 14px; border-radius:8px;
     background:#f0fff4; border:1px solid #a3d9b1;
-    font-size:14px; color:#1a5c2a;
-    animation: fadeOut 2.5s ease 0.5s forwards;">
-  <span style="font-size:18px;">&#10003;</span>
-  <span>Model ready</span>
+    animation:fadeOut 2.5s ease 0.8s forwards;">
+  <div style="height:14px;"></div>
+  <div style="position:relative; width:100%; height:8px; border-radius:4px; background:#a3d9b1;">
+    <svg width="44" height="28" viewBox="0 0 44 28" fill="none"
+         stroke="#1a5c2a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+         style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+                animation:svgFade 0.4s ease 1.0s forwards;">
+      <polyline points="4,14 16,22 40,6"
+                style="stroke-dasharray:40; stroke-dashoffset:40;
+                       animation:drawCheck 0.5s ease 0.1s forwards;"/>
+    </svg>
+  </div>
 </div>
-<style>
-@keyframes fadeOut {
-  0%   { opacity:1; max-height:60px; margin-bottom:8px; }
-  70%  { opacity:1; }
-  100% { opacity:0; max-height:0; margin-bottom:0; overflow:hidden; }
-}
-</style>
 """
 
 _ERROR_HTML = """<div style="padding:8px 14px; border-radius:8px;
@@ -324,7 +330,7 @@ def _load_model_status():
     return _READY_HTML
 
 
-with gr.Blocks(title="Propaganda & Bias Lens") as demo:
+with gr.Blocks(title="Propaganda & Bias Lens", css=_CSS) as demo:
     gr.Markdown(
         """
         # Propaganda & Political Bias Lens
@@ -420,7 +426,7 @@ with gr.Blocks(title="Propaganda & Bias Lens") as demo:
         outputs=[inp, gauge_output, radar_output, signals_tbl, highlight_output, explanation],
     )
 
-    demo.load(fn=_load_model_status, inputs=[], outputs=[model_status])
+    demo.load(fn=_load_model_status, inputs=[], outputs=[model_status], show_progress=False)
 
 # ==========================================
 # 5. Launch
