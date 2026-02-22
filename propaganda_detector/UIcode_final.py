@@ -95,7 +95,7 @@ def create_radar_chart(emotions_dict: dict) -> go.Figure:
     # Auto-scale axis so small NRC scores are visible
     max_val = max(scores) if max(scores) > 0 else 0.1
     axis_max = round(max_val * 1.3, 2)
-    min_r = axis_max * 0.04
+    min_r = axis_max * 0.10
     scores = [max(s, min_r) for s in scores]
 
     fig = go.Figure()
@@ -110,8 +110,7 @@ def create_radar_chart(emotions_dict: dict) -> go.Figure:
                 visible=True,
                 range=[0, axis_max],
                 gridcolor="#aaaaaa",
-                tickfont=dict(size=10, color="black"),
-                tickformat=".2f",
+                showticklabels=False,
             ),
             angularaxis=dict(tickfont=dict(size=12, color="black")),
             bgcolor="rgba(240,240,240,0.5)",
