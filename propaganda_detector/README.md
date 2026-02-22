@@ -69,7 +69,7 @@ Downloads the fine-tuned DistilBERT model (~235 MB) from GitHub Releases.
 python train.py --data data/raw/mbic.csv --compare --final-eval
 ```
 
-**DistilBERT — MBIC only (~15-25 min on CPU, ~5 min on GPU)**
+**DistilBERT — MBIC only (~ 1-3 hr on CPU, ~5 min on GPU)**
 ```bash
 python train_transformer.py --data data/raw/mbic.csv --final-eval
 ```
