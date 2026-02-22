@@ -83,7 +83,7 @@ def create_radar_chart(emotions_dict):
 # ==========================================
 # 2. Real Analysis Logic
 # ==========================================
-def analyze_text_dummy(text: str) -> dict:
+def analyze_text(text: str) -> dict:
     text = (text or "").strip()
     if not text:
         return {}
@@ -131,7 +131,7 @@ def ui_analyze(text: str):
         empty_fig = go.Figure(); empty_fig.update_layout(height=250)
         return empty_fig, empty_fig, pd.DataFrame(), [], "Please enter text to analyze."
 
-    result = analyze_text_dummy(text)
+    result = analyze_text(text)
 
     overall = result.get("overall_score", 0.0)
     signals_data = result.get("signals", {})
