@@ -96,7 +96,18 @@ def create_radar_chart(emotions_dict: dict) -> go.Figure:
     max_val = max(scores) if max(scores) > 0 else 0.1
     axis_max = round(max_val * 1.3, 2)
 
-    fig = go.Figure(data=go.Scatterpolar(
+    # Small center octagon to mark the zero point
+    n = len(categories)
+    center_r = [axis_max * 0.04] * n
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatterpolar(
+        r=center_r, theta=categories, fill="toself",
+        line_color="rgba(100,100,100,0.6)",
+        fillcolor="rgba(100,100,100,0.4)",
+        hoverinfo="skip",
+    ))
+    fig.add_trace(go.Scatterpolar(
         r=scores, theta=categories, fill="toself",
         line_color="rgba(220, 50, 50, 0.9)",
         fillcolor="rgba(220, 50, 50, 0.35)",
