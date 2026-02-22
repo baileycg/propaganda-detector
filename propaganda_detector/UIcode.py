@@ -1,7 +1,15 @@
+import sys
+from pathlib import Path
+
 import gradio as gr
 import pandas as pd
 import plotly.graph_objects as go
 import re
+
+sys.path.insert(0, str(Path(__file__).parent))
+from src.predictor import TransformerDetector
+
+detector = TransformerDetector(model_name="distilbert_model")
 
 # ==========================================
 # 1. Helper Functions for Plotly Charts
@@ -16,7 +24,7 @@ def create_gauge_chart(score):
         value = score * 100, 
         domain = {'x': [0, 1], 'y': [0, 1]},
         title = {'text': "Overall Bias Probability", 'font': {'size': 16}},
-        number = {'suffix': "%", 'font': {'size': 24}},
+        number = {'suffix': "%", 'font': {'size': 24}, 'valueformat': '.1f'},
         gauge = {
             'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
             'bar': {'color': color},
@@ -44,64 +52,69 @@ def create_radar_chart(emotions_dict):
     categories = [*categories, categories[0]]
     scores = [*scores, scores[0]]
 
+    max_val = max(scores) if max(scores) > 0 else 0.1
+    axis_max = round(max_val * 1.3, 2)
+
     fig = go.Figure(data=go.Scatterpolar(
         r=scores, theta=categories, fill='toself',
-        line_color='rgba(99, 110, 250, 0.8)',
-        fillcolor='rgba(99, 110, 250, 0.4)'
+        line_color='rgba(220, 50, 50, 0.9)',
+        fillcolor='rgba(220, 50, 50, 0.35)'
     ))
-    
+
     fig.update_layout(
-        polar=dict(radialaxis=dict(visible=True, range=[0, 1.0], gridcolor='lightgrey')),
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, axis_max],
+                gridcolor='#aaaaaa',
+                tickfont=dict(size=10, color='black'),
+                tickformat='.2f',
+            ),
+            angularaxis=dict(tickfont=dict(size=12, color='black')),
+            bgcolor='rgba(240,240,240,0.5)'
+        ),
         showlegend=False,
         height=300,
         margin=dict(l=40, r=40, t=20, b=20),
-        paper_bgcolor='rgba(0,0,0,0)'
+        paper_bgcolor='white'
     )
     return fig
 
 # ==========================================
-# 2. Dummy Analysis Logic (PLACEHOLDER)
+# 2. Real Analysis Logic
 # ==========================================
 def analyze_text_dummy(text: str) -> dict:
     text = (text or "").strip()
-    if not text: return {}
+    if not text:
+        return {}
 
-    is_propaganda = "destroy" in text.lower() or "corrupt" in text.lower()
-    overall_score = 0.85 if is_propaganda else 0.15
-    
-    signals = {
-        "Political Bias": overall_score * 0.9,
-        "Loaded Language": overall_score * 0.8,
-        "Fear Mongering": 0.7 if is_propaganda else 0.1
-    }
-    
-    emotions = {
-        "Anger": 0.8 if is_propaganda else 0.1,
-        "Fear": 0.6 if is_propaganda else 0.1,
-        "Joy": 0.05 if is_propaganda else 0.7,
-        "Sadness": 0.3,
-        "Trust": 0.1 if is_propaganda else 0.6
-    }
+    result = detector.predict(text)
 
+    signals = {k.replace("_", " ").title(): v for k, v in result.signal_summary.items()}
+
+    emotions = {}
+    if result.emotions:
+        nrc = {k[4:].title(): v for k, v in result.emotions.items() if k.startswith("nrc_")}
+        if nrc:
+            emotions = nrc
+
+    triggered = set(result.triggered_words)
     highlights = []
-    words = text.split(' ')
-    for word in words:
-        clean_word = re.sub(r'[^\w]', '', word).lower()
-        if clean_word in ["destroying", "corrupt", "regime", "threat"]:
+    for word in text.split(' '):
+        clean = re.sub(r'[^\w]', '', word).lower()
+        if clean in triggered:
             highlights.append((word + " ", "Trigger Word"))
-        elif clean_word in ["freedom", "democracy", "stop"]:
-            highlights.append((word + " ", "Framing"))
         else:
             highlights.append((word + " ", None))
-            
+
     explanation = (
-        f"Analysis result: Bias probability is estimated at {overall_score*100:.0f}%. "
-        f"{'Strong provocative tone and political framing detected.' if is_propaganda else 'The text appears to be relatively neutral.'}"
+        f"Label: {result.label} (confidence: {result.confidence*100:.1f}%)\n"
+        f"P(biased): {result.probability_biased:.4f}\n"
+        + (f"Triggered words: {', '.join(result.triggered_words)}" if result.triggered_words else "No trigger words detected.")
     )
 
-   
     return {
-        "overall_score": overall_score,
+        "overall_score": result.probability_biased,
         "signals": signals,
         "emotions": emotions,
         "highlights": highlights,
@@ -140,7 +153,7 @@ def ui_analyze(text: str):
 # ==========================================
 theme = gr.themes.Soft(primary_hue="blue", neutral_hue="slate")
 
-with gr.Blocks(title="Propaganda & Bias Lens") as demo:
+with gr.Blocks(title="Propaganda & Bias Lens", theme=theme) as demo:
     gr.Markdown(
         """
         # 📰 Propaganda & Political Bias Lens
@@ -217,4 +230,4 @@ with gr.Blocks(title="Propaganda & Bias Lens") as demo:
 # 5. Launch App
 # ==========================================
 if __name__ == "__main__":
-    demo.launch(theme=theme, inbrowser=True, prevent_thread_lock=False)
+    demo.launch(inbrowser=True)

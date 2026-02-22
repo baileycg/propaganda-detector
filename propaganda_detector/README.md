@@ -88,7 +88,41 @@ The `--ptc-dir` flag merges ~14,000 PTC v2 propaganda sentences into training, i
 
 ---
 
-## Running predictions
+## API server
+
+Start the FastAPI backend to serve predictions over HTTP:
+
+```bash
+cd propaganda_detector
+python api.py
+# or: uvicorn api:app --reload --port 8000
+```
+
+The server runs at `http://localhost:8000`. Interactive docs are available at `http://localhost:8000/docs`.
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Readiness check — returns loaded models |
+| `GET` | `/models` | List available model backends |
+| `POST` | `/predict` | Classify a single text |
+| `POST` | `/predict/batch` | Classify up to 100 texts at once |
+| `POST` | `/predict/url` | Fetch & classify text from a URL |
+
+### Example request
+
+```bash
+curl -X POST http://localhost:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"text": "The corrupt regime destroyed everything!", "model_type": "transformer", "threshold": 0.5}'
+```
+
+Each request accepts an optional `model_type` (`"sklearn"` or `"transformer"`) and `threshold` (0–1).
+
+---
+
+## CLI predictions
 
 ### Single text string
 
@@ -198,6 +232,7 @@ propaganda_detector/
 ├── train.py                      # Train sklearn models
 ├── train_transformer.py          # Fine-tune DistilBERT (supports --ptc-dir)
 ├── main.py                       # CLI entry point
+├── api.py                        # FastAPI backend (uvicorn)
 └── requirements.txt
 ```
 
