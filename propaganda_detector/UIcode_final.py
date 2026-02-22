@@ -241,8 +241,13 @@ def ui_analyze(text: str):
     gauge_plot = create_gauge_chart(overall)
     radar_plot = create_radar_chart(emotions_data)
 
+    def _fmt_signal(k, v):
+        if k == "Exclamation Marks":
+            return str(int(round(v)))
+        return f"{v * 100:.1f}%"
+
     signals_df = pd.DataFrame(
-        [{"Signal Type": k, "Score": f"{v:.4f}"} for k, v in signals_data.items()]
+        [{"Signal Type": k, "Score": _fmt_signal(k, v)} for k, v in signals_data.items()]
     ).sort_values("Signal Type").reset_index(drop=True)
 
     return gauge_plot, radar_plot, signals_df, highlights, explanation
@@ -254,7 +259,7 @@ def ui_analyze(text: str):
 
 theme = gr.themes.Soft(primary_hue="blue", neutral_hue="slate")
 
-with gr.Blocks(title="Propaganda & Bias Lens", theme=theme) as demo:
+with gr.Blocks(title="Propaganda & Bias Lens") as demo:
     gr.Markdown(
         """
         # Propaganda & Political Bias Lens
@@ -350,4 +355,4 @@ with gr.Blocks(title="Propaganda & Bias Lens", theme=theme) as demo:
 # 5. Launch
 # ==========================================
 if __name__ == "__main__":
-    demo.launch(inbrowser=True)
+    demo.launch(inbrowser=True, theme=theme)
