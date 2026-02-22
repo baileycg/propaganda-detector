@@ -65,7 +65,7 @@ def create_gauge_chart(score: float) -> go.Figure:
         title={"text": "Overall Bias Probability", "font": {"size": 16}},
         number={"suffix": "%", "font": {"size": 36, "color": bar_color, "family": "Arial Black"}, "valueformat": ".1f"},
         gauge={
-            "axis": {"range": [0, 100], "tickwidth": 1, "tickcolor": "darkblue"},
+            "axis": {"range": [0, 100], "tickwidth": 1, "tickcolor": "darkblue", "tickvals": [0, 25, 50, 75, 100]},
             "bar": {"color": bar_color},
             "bgcolor": "white",
             "borderwidth": 2,
@@ -77,7 +77,7 @@ def create_gauge_chart(score: float) -> go.Figure:
             ],
         },
     ))
-    fig.update_layout(height=230, margin=dict(l=30, r=30, t=45, b=10))
+    fig.update_layout(height=230, margin=dict(l=40, r=40, t=45, b=10))
     return fig
 
 
@@ -92,12 +92,6 @@ def create_radar_chart(emotions_dict: dict) -> go.Figure:
     categories = [*categories, categories[0]]
     scores = [*scores, scores[0]]
 
-    # Auto-scale axis so small NRC scores are visible
-    max_val = max(scores) if max(scores) > 0 else 0.1
-    axis_max = round(max_val * 1.3, 2)
-    min_r = axis_max * 0.10
-    scores = [max(s, min_r) for s in scores]
-
     fig = go.Figure()
     fig.add_trace(go.Scatterpolar(
         r=scores, theta=categories, fill="toself",
@@ -108,7 +102,7 @@ def create_radar_chart(emotions_dict: dict) -> go.Figure:
         polar=dict(
             radialaxis=dict(
                 visible=True,
-                range=[0, axis_max],
+                range=[-1/9, 1.0],
                 gridcolor="#aaaaaa",
                 showticklabels=False,
                 showline=False,
@@ -224,9 +218,8 @@ def ui_analyze(text: str):
     text = (text or "").strip()
 
     if not text:
-        empty_fig = go.Figure()
-        empty_fig.update_layout(height=250)
-        return empty_fig, empty_fig, pd.DataFrame(), [], "Please enter text to analyze."
+        _empty_emotions = {"Anger": 0.0, "Fear": 0.0, "Anticipation": 0.0, "Trust": 0.0, "Surprise": 0.0, "Sadness": 0.0, "Disgust": 0.0, "Joy": 0.0}
+        return create_gauge_chart(0.0), create_radar_chart(_empty_emotions), pd.DataFrame(), [], ""
 
     result = analyze_text(text)
 
@@ -283,7 +276,7 @@ _LOADING_HTML = """
         animation: slide 1.2s ease-in-out infinite;">
     </div>
   </div>
-  <span>Loading model weights...</span>
+  <span>Initializing model...</span>
 </div>
 <style>
 @keyframes slide {
@@ -373,9 +366,10 @@ with gr.Blocks(title="Propaganda & Bias Lens") as demo:
 
             with gr.Row():
                 with gr.Column():
-                    gauge_output = gr.Plot(label=None, show_label=False)
+                    gauge_output = gr.Plot(label=None, show_label=False, value=create_gauge_chart(0.0))
                 with gr.Column():
-                    radar_output = gr.Plot(label=None, show_label=False)
+                    _empty_emotions = {"Anger": 0.0, "Fear": 0.0, "Anticipation": 0.0, "Trust": 0.0, "Surprise": 0.0, "Sadness": 0.0, "Disgust": 0.0, "Joy": 0.0}
+                    radar_output = gr.Plot(label=None, show_label=False, value=create_radar_chart(_empty_emotions))
 
             with gr.Tabs():
                 with gr.TabItem("Evidence Highlights"):
@@ -416,10 +410,12 @@ with gr.Blocks(title="Propaganda & Bias Lens") as demo:
         """,
     )
 
-    empty_fig = go.Figure()
-    empty_fig.update_layout(height=250)
+    def _clear():
+        _empty_emotions = {"Anger": 0.0, "Fear": 0.0, "Anticipation": 0.0, "Trust": 0.0, "Surprise": 0.0, "Sadness": 0.0, "Disgust": 0.0, "Joy": 0.0}
+        return "", create_gauge_chart(0.0), create_radar_chart(_empty_emotions), pd.DataFrame(), [], ""
+
     clear_btn.click(
-        fn=lambda: ("", empty_fig, empty_fig, pd.DataFrame(), [], ""),
+        fn=_clear,
         inputs=[],
         outputs=[inp, gauge_output, radar_output, signals_tbl, highlight_output, explanation],
     )
