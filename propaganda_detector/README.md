@@ -52,7 +52,7 @@ print('Done')
 
 ## Getting the model
 
-The weights are founbd in the releases under v2.0
+The weights are found in the releases under v2.0
 
 If you want to recreate the model, you can choose one of the following options
 
