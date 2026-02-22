@@ -95,6 +95,8 @@ def create_radar_chart(emotions_dict: dict) -> go.Figure:
     # Auto-scale axis so small NRC scores are visible
     max_val = max(scores) if max(scores) > 0 else 0.1
     axis_max = round(max_val * 1.3, 2)
+    min_r = axis_max * 0.04
+    scores = [max(s, min_r) for s in scores]
 
     fig = go.Figure()
     fig.add_trace(go.Scatterpolar(
@@ -104,7 +106,6 @@ def create_radar_chart(emotions_dict: dict) -> go.Figure:
     ))
     fig.update_layout(
         polar=dict(
-            hole=0.04,
             radialaxis=dict(
                 visible=True,
                 range=[0, axis_max],
