@@ -158,6 +158,10 @@
           ? "Heavy use of exclamation marks — adds urgency or alarm"
           : "Normal punctuation",
     },
+    exclamation_count: {
+      label: "Exclamation Count",
+      explain: (v) => `${Math.round(v)} exclamation mark${Math.round(v) !== 1 ? "s" : ""} found`,
+    },
     caps_ratio: {
       label: "ALL CAPS Usage",
       explain: (v) =>
@@ -219,7 +223,13 @@
           : "Few specific names or places",
     },
 
-    // Catch-all for unknown keys
+    assertive_ratio: {
+      label: "Assertive Language",
+      explain: (v) =>
+        v > 0.1
+          ? "Strong assertive tone — states things as definitive facts"
+          : "Low assertiveness — more measured language",
+    },
     _default: {
       label: null,
       explain: (v) => `${Number(v).toFixed(3)}`,
@@ -358,7 +368,8 @@
           const { label, explanation } = getSignalInfo(key, val);
           return `
             <div class="bdp-signal-row">
-              <span class="bdp-signal-label">${escapeHTML(label)}</span>
+              <strong class="bdp-signal-label">${escapeHTML(label)}</strong>
+              <span class="bdp-signal-sep"> — </span>
               <span class="bdp-signal-explain">${escapeHTML(explanation)}</span>
             </div>`;
         })
