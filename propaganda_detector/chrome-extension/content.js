@@ -537,23 +537,37 @@
         white-space: nowrap;
       }
 
-      /* ── Aligned signal rows ── */
+      /* ── Signal rows — forced single line ── */
       .bdp-signal-row {
         display: flex;
         align-items: baseline;
-        gap: 4px;
-        margin-bottom: 6px;
-        font-size: 12px;
-        line-height: 1.5;
+        gap: 0;
+        margin-bottom: 5px;
+        font-size: 11px;
+        line-height: 1.4;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      .bdp-signal-label {
+        flex-shrink: 0;
+        white-space: nowrap;
       }
 
       .bdp-signal-sep {
         color: #4a5568;
         flex-shrink: 0;
+        white-space: nowrap;
+      }
+
+      .bdp-signal-explain {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     `;
     document.head.appendChild(s);
   }
 
   injectStyles();
-})();
+})
