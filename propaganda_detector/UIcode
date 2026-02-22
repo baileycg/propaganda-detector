@@ -99,7 +99,7 @@ def analyze_text_dummy(text: str) -> dict:
         f"{'Strong provocative tone and political framing detected.' if is_propaganda else 'The text appears to be relatively neutral.'}"
     )
 
-    # 🚨 방금 에러가 났던 부분입니다! 닫는 괄호 '}' 가 꼭 있어야 합니다.
+   
     return {
         "overall_score": overall_score,
         "signals": signals,
