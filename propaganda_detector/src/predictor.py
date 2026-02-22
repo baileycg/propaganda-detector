@@ -28,6 +28,7 @@ import pandas as pd
 
 from .models import load_pipeline
 from .features import LinguisticFeatureExtractor, LOADED_WORDS, HEDGING_WORDS, ASSERTIVE_WORDS
+from .emotion_analyzer import EmotionAnalyzer
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,7 @@ class PredictionResult:
     signal_summary: Dict[str, float]    # key linguistic signals
     triggered_words: List[str]          # loaded/assertive/emotional words found
     llm_summary: Optional[str] = None  # placeholder for LLM explanation
+    emotions: Optional[Dict[str, float]] = None  # NRC + HF emotion scores
 
     def __str__(self) -> str:
         bar_len = 30
@@ -71,6 +73,19 @@ class PredictionResult:
             lines.append("|  LLM Summary:                                 |")
             for chunk in textwrap.wrap(self.llm_summary, width=45):
                 lines.append(f"|  {chunk:<45}|")
+        if self.emotions:
+            lines.append("+-----------------------------------------------+")
+            lines.append("|  Emotions detected:                           |")
+            nrc_items = {k[4:]: v for k, v in self.emotions.items() if k.startswith("nrc_")}
+            hf_items  = {k[3:]: v for k, v in self.emotions.items() if k.startswith("hf_")}
+            if nrc_items:
+                top_nrc = sorted(nrc_items.items(), key=lambda x: x[1], reverse=True)[:3]
+                nrc_str = "  ".join(f"{e[:5]}={v:.4f}" for e, v in top_nrc)
+                lines.append(f"|  {'nrc: ' + nrc_str:<45}|")
+            if hf_items:
+                top_hf = sorted(hf_items.items(), key=lambda x: x[1], reverse=True)[:3]
+                hf_str = "  ".join(f"{e[:5]}={v:.4f}" for e, v in top_hf)
+                lines.append(f"|  {'hf : ' + hf_str:<45}|")
         lines.append("+-----------------------------------------------+")
         return "\n".join(lines)
 
@@ -84,6 +99,7 @@ class PredictionResult:
             "signal_summary": {k: round(v, 4) for k, v in self.signal_summary.items()},
             "triggered_words": self.triggered_words,
             "llm_summary": self.llm_summary,
+            "emotions": self.emotions,
         }
 
 
@@ -106,6 +122,7 @@ class PropagandaDetector:
         self.threshold = threshold
         self._pipeline = load_pipeline(model_name)
         self._ling = LinguisticFeatureExtractor()
+        self._emotion = EmotionAnalyzer()
 
     # ------------------------------------------------------------------
     def predict(self, text: str) -> PredictionResult:
@@ -136,6 +153,9 @@ class PropagandaDetector:
             {t for t in tokens if t in LOADED_WORDS | ASSERTIVE_WORDS}
         )
 
+        # Emotion analysis (HF model only runs for propaganda text)
+        emotions = self._emotion.analyze(text, run_hf=(label == "Propaganda / Biased"))
+
         return PredictionResult(
             text=text,
             label=label,
@@ -145,6 +165,7 @@ class PropagandaDetector:
             signal_summary=signal_summary,
             triggered_words=triggered,
             llm_summary=None,  # Reserved for LLM integration
+            emotions=emotions,
         )
 
     def predict_batch(self, texts: List[str]) -> List[PredictionResult]:
@@ -181,6 +202,7 @@ class TransformerDetector:
         from .transformer_model import DistilBertTrainer
         self._trainer = DistilBertTrainer.load(model_name)
         self._ling = LinguisticFeatureExtractor()
+        self._emotion = EmotionAnalyzer()
 
     def predict(self, text: str) -> PredictionResult:
         proba = self._trainer.predict_proba([text])[0]
@@ -203,6 +225,9 @@ class TransformerDetector:
         tokens = text.lower().split()
         triggered = list({t for t in tokens if t in LOADED_WORDS | ASSERTIVE_WORDS})
 
+        # Emotion analysis (HF model only runs for propaganda text)
+        emotions = self._emotion.analyze(text, run_hf=(label == "Propaganda / Biased"))
+
         return PredictionResult(
             text=text,
             label=label,
@@ -212,6 +237,7 @@ class TransformerDetector:
             signal_summary=signal_summary,
             triggered_words=triggered,
             llm_summary=None,
+            emotions=emotions,
         )
 
     def predict_batch(self, texts: List[str]) -> List[PredictionResult]:
