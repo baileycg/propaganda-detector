@@ -77,7 +77,7 @@ def create_gauge_chart(score: float) -> go.Figure:
             ],
         },
     ))
-    fig.update_layout(height=230, margin=dict(l=40, r=40, t=45, b=10))
+    fig.update_layout(height=300, margin=dict(l=40, r=40, t=45, b=10))
     return fig
 
 
@@ -347,19 +347,10 @@ with gr.Blocks(title="Propaganda & Bias Lens", css=_CSS) as demo:
                 lines=12,
             )
 
+            run_btn = gr.Button("Analyze Text", variant="primary")
             with gr.Row():
-                run_btn   = gr.Button("Analyze Text", variant="primary", scale=2)
                 paste_btn = gr.Button("Paste", scale=1)
                 clear_btn = gr.Button("Clear", scale=1)
-
-            gr.Examples(
-                examples=[
-                    ["They are destroying our country! The corrupt regime must be stopped now before it's too late."],
-                    ["The city council held a routine meeting on Tuesday to discuss the annual budget for public parks and recreation centers."],
-                ],
-                inputs=inp,
-                label="Test Examples (Click to try)",
-            )
 
             explanation = gr.Textbox(
                 label="AI Analysis Summary",
@@ -376,6 +367,39 @@ with gr.Blocks(title="Propaganda & Bias Lens", css=_CSS) as demo:
                 with gr.Column():
                     _empty_emotions = {"Anger": 0.0, "Fear": 0.0, "Anticipation": 0.0, "Trust": 0.0, "Surprise": 0.0, "Sadness": 0.0, "Disgust": 0.0, "Joy": 0.0}
                     radar_output = gr.Plot(label=None, show_label=False, value=create_radar_chart(_empty_emotions))
+
+            with gr.Row():
+                with gr.Column():
+                    gr.Examples(
+                        examples=[
+                            ["They are destroying our country! The corrupt regime must be stopped now before it's too late."],
+                            ["The city council held a routine meeting on Tuesday to discuss the annual budget for public parks and recreation centers."],
+                        ],
+                        inputs=inp,
+                        label="Examples (Click to try)",
+                    )
+                with gr.Column():
+                    gr.HTML("""
+<div style="display:flex; flex-direction:column; gap:6px;">
+  <p style="margin:0; font-size:15px; font-weight:600; color:white; letter-spacing:0.01em;">Paste Something from here</p>
+  <a href="https://apnews.com/" target="_blank" style="
+      display:block; text-align:center;
+      padding:9px 16px; border-radius:8px;
+      background:#f0f4ff; border:1px solid #d0d9f0;
+      font-size:14px; font-weight:600; color:#374151; text-decoration:none;
+      box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+    Try a fresh news article &rarr; AP News
+  </a>
+  <a href="https://www.reddit.com/r/PoliticalDebate/" target="_blank" style="
+      display:block; text-align:center;
+      padding:9px 16px; border-radius:8px;
+      background:#f0f4ff; border:1px solid #d0d9f0;
+      font-size:14px; font-weight:600; color:#374151; text-decoration:none;
+      box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+    See how biased the debate gets &rarr; r/PoliticalDebate
+  </a>
+</div>
+""")
 
             with gr.Tabs():
                 with gr.TabItem("Evidence Highlights"):
