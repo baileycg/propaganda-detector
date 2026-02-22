@@ -41,3 +41,5 @@ Thumbs.db
 *.log
 *.tmp
 Untitled-2.txt
+
+distilbert_model/
