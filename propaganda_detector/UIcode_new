@@ -182,3 +182,8 @@ def ui_analyze(text: str):
     ).sort_values("Signal Type")
 
     return gauge_plot, radar_plot, signals_df, highlights_data, explanation_text
+# ==========================================
+# 5. Launch App
+# ==========================================
+if __name__ == "__main__":
+    demo.launch(theme=theme, inbrowser=True, share=False, debug=True)
