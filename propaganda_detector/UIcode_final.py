@@ -77,7 +77,7 @@ def create_gauge_chart(score: float) -> go.Figure:
             ],
         },
     ))
-    fig.update_layout(height=250, margin=dict(l=20, r=20, t=50, b=20))
+    fig.update_layout(height=230, margin=dict(l=30, r=30, t=45, b=10))
     return fig
 
 
@@ -111,6 +111,7 @@ def create_radar_chart(emotions_dict: dict) -> go.Figure:
                 range=[0, axis_max],
                 gridcolor="#aaaaaa",
                 showticklabels=False,
+                showline=False,
             ),
             angularaxis=dict(tickfont=dict(size=12, color="black")),
             bgcolor="rgba(240,240,240,0.5)",
