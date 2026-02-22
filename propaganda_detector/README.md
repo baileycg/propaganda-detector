@@ -52,7 +52,9 @@ print('Done')
 
 ## Getting the model
 
-The trained model weights are not stored in git (too large). Use one of the options below.
+The weights are founbd in the releases under v2.0
+
+If you want to recreate the model, you can choose one of the following options
 
 ### Option A — Download pre-trained model (recommended, ~2 min)
 
