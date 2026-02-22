@@ -228,7 +228,7 @@
       explain: (v) =>
         v > 0.1
           ? "Strong assertive tone — states things as definitive facts"
-          : "Low assertiveness — more measured language",
+          : "Low assertiveness, more measured language",
     },
     _default: {
       label: null,
@@ -322,10 +322,16 @@
     // ── Bias meter ──
     const meterHTML = `
       <div class="bdp-meter-wrap">
-        <div class="bdp-meter-track">
-          <div class="bdp-meter-fill" style="width:${pct}%; background:${level.color}"></div>
+        <div class="bdp-meter-spectrum-labels">
+          <span>Balanced</span>
+          <span>Slightly Balanced</span>
+          <span>Possibly Biased</span>
+          <span>Biased</span>
         </div>
-        <div class="bdp-meter-labels">
+        <div class="bdp-meter-spectrum-track">
+          <div class="bdp-meter-spectrum-marker" style="left:${pct}%"></div>
+        </div>
+        <div class="bdp-meter-bottom">
           <span style="color:${level.color}; font-weight:600">${level.text}</span>
           <span class="bdp-pct">${pct}% biased</span>
         </div>
@@ -395,10 +401,7 @@
         const source = emotionSource(key);
         return `
           <div class="bdp-emotion-row">
-            <div class="bdp-emotion-meta">
-              <span class="bdp-emotion-name">${escapeHTML(name)}</span>
-              ${source ? `<span class="bdp-emotion-source">${source}</span>` : ""}
-            </div>
+            <span class="bdp-emotion-name">${escapeHTML(name)}${source ? ` <span class="bdp-emotion-source">${source}</span>` : ""}</span>
             <div class="bdp-emotion-bar-bg">
               <div class="bdp-emotion-bar" style="width:${w}%"></div>
             </div>
@@ -447,4 +450,109 @@
     return name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
-})();
+  // Inject alignment + spectrum bar styles
+  function injectStyles() {
+    if (document.getElementById("bdp-extra-styles")) return;
+    const s = document.createElement("style");
+    s.id = "bdp-extra-styles";
+    s.textContent = `
+      /* ── Spectrum bias bar ── */
+      .bdp-meter-wrap { margin-bottom: 12px; }
+
+      .bdp-meter-spectrum-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 9px;
+        color: #6b7f8f;
+        margin-bottom: 4px;
+        letter-spacing: 0.03em;
+      }
+
+      .bdp-meter-spectrum-track {
+        position: relative;
+        height: 8px;
+        border-radius: 99px;
+        background: linear-gradient(to right, #00e8a0, #8bc34a, #ffb020, #ff6b35, #ff2d4e);
+        margin-bottom: 6px;
+      }
+
+      .bdp-meter-spectrum-marker {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid #000;
+        box-shadow: 0 0 4px rgba(0,0,0,0.4);
+        transition: left 0.5s cubic-bezier(.23,1,.32,1);
+      }
+
+      .bdp-meter-bottom {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+      }
+
+      /* ── Aligned emotion rows ── */
+      .bdp-emotion-row {
+        display: grid;
+        grid-template-columns: 110px 1fr 36px;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+
+      .bdp-emotion-name {
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .bdp-emotion-source {
+        font-size: 9px;
+        opacity: 0.5;
+        margin-left: 4px;
+      }
+
+      .bdp-emotion-bar-bg {
+        height: 5px;
+        border-radius: 99px;
+        background: rgba(255,255,255,0.08);
+        overflow: hidden;
+      }
+
+      .bdp-emotion-bar {
+        height: 100%;
+        border-radius: 99px;
+        background: #c8f000;
+      }
+
+      .bdp-emotion-val {
+        font-size: 11px;
+        text-align: right;
+        opacity: 0.7;
+        white-space: nowrap;
+      }
+
+      /* ── Aligned signal rows ── */
+      .bdp-signal-row {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+        margin-bottom: 6px;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .bdp-signal-sep {
+        color: #4a5568;
+        flex-shrink: 0;
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
+  injectStyles();
