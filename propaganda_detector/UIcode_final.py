@@ -343,13 +343,10 @@ with gr.Blocks(title="Propaganda & Bias Lens") as demo:
         """,
     )
 
-    def _clear():
-        empty = go.Figure()
-        empty.update_layout(height=250)
-        return "", empty, empty, pd.DataFrame(), [], ""
-
+    empty_fig = go.Figure()
+    empty_fig.update_layout(height=250)
     clear_btn.click(
-        fn=_clear,
+        fn=lambda: ("", empty_fig, empty_fig, pd.DataFrame(), [], ""),
         inputs=[],
         outputs=[inp, gauge_output, radar_output, signals_tbl, highlight_output, explanation],
     )
