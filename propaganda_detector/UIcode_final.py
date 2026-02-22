@@ -254,9 +254,9 @@ def ui_analyze(text: str):
             return "Strongly Negative"
         return f"{v * 100:.1f}%"
 
-    signals_df = pd.DataFrame(
-        [{"Signal Type": k, "Score": _fmt_signal(k, v)} for k, v in signals_data.items()]
-    ).sort_values("Signal Type").reset_index(drop=True)
+    rows = [{"Signal Type": k, "Score": _fmt_signal(k, v)} for k, v in signals_data.items()]
+    rows.sort(key=lambda r: (0 if r["Signal Type"] == "Sentiment (VADER compound)" else 1, r["Signal Type"]))
+    signals_df = pd.DataFrame(rows).reset_index(drop=True)
 
     return gauge_plot, radar_plot, signals_df, highlights, explanation
 
@@ -308,9 +308,9 @@ with gr.Blocks(title="Propaganda & Bias Lens") as demo:
 
             with gr.Row():
                 with gr.Column():
-                    gauge_output = gr.Plot(label="Overall Bias Probability")
+                    gauge_output = gr.Plot(label=None, show_label=False)
                 with gr.Column():
-                    radar_output = gr.Plot(label="Emotion Spectrum Radar")
+                    radar_output = gr.Plot(label=None, show_label=False)
 
             with gr.Tabs():
                 with gr.TabItem("Evidence Highlights"):
