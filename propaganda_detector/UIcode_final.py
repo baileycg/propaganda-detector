@@ -268,6 +268,69 @@ def ui_analyze(text: str):
 
 theme = gr.themes.Soft(primary_hue="blue", neutral_hue="slate")
 
+_LOADING_HTML = """
+<div id="model-status" style="
+    display:flex; align-items:center; gap:10px;
+    padding:8px 14px; border-radius:8px;
+    background:#f0f4ff; border:1px solid #c7d7f5;
+    font-size:14px; color:#334;">
+  <div style="
+      width:160px; height:8px; border-radius:4px;
+      background:#dde; overflow:hidden;">
+    <div style="
+        height:100%; width:40%; border-radius:4px;
+        background:#5b8dee;
+        animation: slide 1.2s ease-in-out infinite;">
+    </div>
+  </div>
+  <span>Loading model weights...</span>
+</div>
+<style>
+@keyframes slide {
+  0%   { margin-left:-40%; }
+  100% { margin-left:100%; }
+}
+@keyframes fadeOut {
+  0%   { opacity:1; max-height:60px; margin-bottom:8px; }
+  70%  { opacity:1; }
+  100% { opacity:0; max-height:0; margin-bottom:0; overflow:hidden; }
+}
+</style>
+"""
+
+_READY_HTML = """
+<div style="
+    display:flex; align-items:center; gap:10px;
+    padding:8px 14px; border-radius:8px;
+    background:#f0fff4; border:1px solid #a3d9b1;
+    font-size:14px; color:#1a5c2a;
+    animation: fadeOut 2.5s ease 0.5s forwards;">
+  <span style="font-size:18px;">&#10003;</span>
+  <span>Model ready</span>
+</div>
+<style>
+@keyframes fadeOut {
+  0%   { opacity:1; max-height:60px; margin-bottom:8px; }
+  70%  { opacity:1; }
+  100% { opacity:0; max-height:0; margin-bottom:0; overflow:hidden; }
+}
+</style>
+"""
+
+_ERROR_HTML = """<div style="padding:8px 14px; border-radius:8px;
+    background:#fff0f0; border:1px solid #f5c7c7;
+    font-size:14px; color:#8b0000;">
+  Model failed to load. Run <code>py download_model.py</code> first.
+</div>"""
+
+
+def _load_model_status():
+    detector, error = _get_detector()
+    if detector is None:
+        return _ERROR_HTML
+    return _READY_HTML
+
+
 with gr.Blocks(title="Propaganda & Bias Lens") as demo:
     gr.Markdown(
         """
@@ -275,6 +338,7 @@ with gr.Blocks(title="Propaganda & Bias Lens") as demo:
         **AI-Powered Dashboard for Detecting Political Bias and Propaganda in News & Text**
         """
     )
+    model_status = gr.HTML(value=_LOADING_HTML)
 
     with gr.Row():
         with gr.Column(scale=1, min_width=400):
@@ -359,6 +423,8 @@ with gr.Blocks(title="Propaganda & Bias Lens") as demo:
         inputs=[],
         outputs=[inp, gauge_output, radar_output, signals_tbl, highlight_output, explanation],
     )
+
+    demo.load(fn=_load_model_status, inputs=[], outputs=[model_status])
 
 # ==========================================
 # 5. Launch
