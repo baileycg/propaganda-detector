@@ -188,7 +188,7 @@ def analyze_text(text: str) -> dict:
     result = detector.predict(text)
 
     signals = {
-        _SIGNAL_DISPLAY_NAMES.get(k, k): abs(v)
+        _SIGNAL_DISPLAY_NAMES.get(k, k): v if k == "vader_compound" else abs(v)
         for k, v in result.signal_summary.items()
     }
     emotions = _build_emotions_for_radar(result.emotions)
@@ -244,6 +244,12 @@ def ui_analyze(text: str):
     def _fmt_signal(k, v):
         if k == "Exclamation Marks":
             return str(int(round(v)))
+        if k == "Sentiment (VADER compound)":
+            if v >= 0.5:   return "Strongly Positive"
+            if v >= 0.05:  return "Positive"
+            if v > -0.05:  return "Neutral"
+            if v > -0.5:   return "Negative"
+            return "Strongly Negative"
         return f"{v * 100:.1f}%"
 
     signals_df = pd.DataFrame(
