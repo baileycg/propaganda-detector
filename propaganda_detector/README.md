@@ -122,6 +122,27 @@ Each request accepts an optional `model_type` (`"sklearn"` or `"transformer"`) a
 
 ---
 
+## Chrome extension
+
+A Chrome extension is included that lets you highlight text on any webpage, right-click, and check it for bias.
+
+### Install (developer mode)
+
+1. Make sure the API server is running (see above).
+2. Open Chrome and go to `chrome://extensions`.
+3. Enable **Developer mode** (toggle in the top-right).
+4. Click **Load unpacked** and select the `chrome-extension/` folder.
+5. The extension icon appears in your toolbar.
+
+### Usage
+
+- **Right-click**: Highlight text on any page → right-click → **Check for Bias: "…"**
+- **Keyboard shortcut**: Select text, then press <kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> (Mac) or <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> (Windows/Linux).
+- A floating panel appears next to the selection showing the label, confidence, triggered words, linguistic signals, and emotion breakdown.
+- Click the extension icon to configure the API URL, model type, and threshold.
+
+---
+
 ## CLI predictions
 
 ### Single text string
@@ -233,7 +254,14 @@ propaganda_detector/
 ├── train_transformer.py          # Fine-tune DistilBERT (supports --ptc-dir)
 ├── main.py                       # CLI entry point
 ├── api.py                        # FastAPI backend (uvicorn)
-└── requirements.txt
+├── requirements.txt
+└── chrome-extension/             # Chrome extension (Manifest V3)
+    ├── manifest.json
+    ├── background.js             # Service worker (context menu + API calls)
+    ├── content.js                # Injected into pages (result panel)
+    ├── styles.css                # Panel styling
+    ├── popup.html / popup.js     # Settings popup
+    └── icons/                    # Extension icons
 ```
 
 ---

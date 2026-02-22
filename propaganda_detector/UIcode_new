@@ -1,0 +1,189 @@
+import gradio as gr
+import pandas as pd
+import plotly.graph_objects as go
+import re
+
+# ==========================================
+# 1. Helper Functions for Plotly Charts
+# ==========================================
+def create_gauge_chart(score):
+    """Generates a semi-circular gauge chart based on the bias score (0.0 to 1.0)"""
+    
+    # Thresholds: Safe (under 30%), Warning (30-70%), Danger (over 70%)
+    if score < 0.3:
+        bar_color = "#2ecc71" # Safe (Green)
+    elif score < 0.7:
+        bar_color = "#f1c40f" # Warning (Yellow)
+    else:
+        bar_color = "#e74c3c" # Danger (Red)
+    
+    fig = go.Figure(go.Indicator(
+        mode = "gauge+number",
+        value = score * 100, 
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        title = {'text': "Overall Bias Probability", 'font': {'size': 16}},
+        # Dynamic color and large font size for visibility even near 0%
+        number = {'suffix': "%", 'font': {'size': 36, 'color': bar_color, 'family': "Arial Black"}}, 
+        gauge = {
+            'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+            'bar': {'color': bar_color}, 
+            'bgcolor': "white",
+            'borderwidth': 2,
+            'bordercolor': "gray",
+            # Light background steps matching the thresholds
+            'steps': [
+                {'range': [0, 30], 'color': 'rgba(46, 204, 113, 0.15)'},
+                {'range': [30, 70], 'color': 'rgba(241, 196, 15, 0.15)'},
+                {'range': [70, 100], 'color': 'rgba(231, 76, 60, 0.15)'}
+            ],
+        }
+    ))
+    fig.update_layout(height=250, margin=dict(l=20, r=20, t=50, b=20))
+    return fig
+
+def create_radar_chart(emotions_dict):
+    """Generates a radar chart based on the emotions dictionary"""
+    if not emotions_dict:
+        fig = go.Figure()
+        fig.update_layout(height=250, polar=dict(radialaxis=dict(visible=False)))
+        return fig
+
+    categories = list(emotions_dict.keys())
+    scores = list(emotions_dict.values())
+    
+    # Close the radar loop
+    categories = [*categories, categories[0]]
+    scores = [*scores, scores[0]]
+
+    fig = go.Figure(data=go.Scatterpolar(
+        r=scores, theta=categories, fill='toself',
+        line_color='rgba(99, 110, 250, 0.8)',
+        fillcolor='rgba(99, 110, 250, 0.4)'
+    ))
+    
+    fig.update_layout(
+        polar=dict(radialaxis=dict(visible=True, range=[0, 1.0], gridcolor='lightgrey')),
+        showlegend=False,
+        height=300,
+        margin=dict(l=40, r=40, t=20, b=20),
+        paper_bgcolor='rgba(0,0,0,0)'
+    )
+    return fig
+
+# ==========================================
+# 2. ACTUAL Analysis Logic (Model Integration)
+# ==========================================
+import os
+import sys
+
+# Ensure Python can find the 'src' folder
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from src.predictor import TransformerDetector
+
+print("Loading the actual AI model... This might take a moment. ⏳")
+try:
+    # Load the downloaded model from the 'models' directory
+    DETECTOR = TransformerDetector(model_name="distilbert_model", threshold=0.5)
+    print("AI Model loaded successfully! 🚀")
+except Exception as e:
+    print(f"Error loading model: {e}")
+    print("Make sure you ran 'python download_model.py' first!")
+    DETECTOR = None
+
+def analyze_text_actual(text: str) -> dict:
+    text = (text or "").strip()
+    if not text: 
+        return {}
+        
+    # Safeguard if the model failed to load
+    if DETECTOR is None:
+        return {
+            "overall_score": 0.0,
+            "signals": {"Status": "Error"},
+            "emotions": {},
+            "highlights": [],
+            "explanation": "ERROR: Model not loaded. Please run 'python download_model.py' to download the model weights."
+        }
+
+    try:
+        # 1. Run the actual AI prediction!
+        prediction = DETECTOR.predict(text)
+        
+        # 2. Extract results from the model's output
+        overall_score = float(prediction.get("probability_biased", 0.0))
+        label = prediction.get("label", "Unknown")
+        confidence = float(prediction.get("confidence", 0.0))
+        
+        # 3. Emotions data for the Radar Chart
+        emotions = prediction.get("emotions", {})
+        
+        # 4. Signals data for the Table
+        signals = {k.capitalize(): float(v) for k, v in emotions.items()}
+        if not signals:
+            signals = {"Bias Score": overall_score}
+            
+        # 5. Highlight logic for triggering words
+        triggered_words = prediction.get("triggered_words", [])
+        highlights = []
+        words = text.split(' ') 
+        
+        for word in words:
+            clean_word = re.sub(r'[^\w]', '', word).lower()
+            # If the word matches a triggered word from the model, highlight it
+            if clean_word in [tw.lower() for tw in triggered_words]:
+                highlights.append((word + " ", "Trigger Word"))
+            else:
+                highlights.append((word + " ", None))
+                
+        # 6. Generate final explanation text
+        explanation = (
+            f"🎯 AI Decision: '{label}' (Confidence: {confidence*100:.1f}%).\n"
+            f"The probability of being biased or propaganda is {overall_score*100:.1f}%."
+        )
+        if triggered_words:
+            explanation += f"\n🚩 Trigger words detected: {', '.join(triggered_words)}"
+
+        return {
+            "overall_score": overall_score,
+            "signals": signals,
+            "emotions": emotions,
+            "highlights": highlights,
+            "explanation": explanation,
+        }
+        
+    except Exception as e:
+        print(f"Prediction Error: {e}")
+        return {}
+
+# ==========================================
+# 3. Gradio UI Adapter Function
+# ==========================================
+def ui_analyze(text: str):
+    text = (text or "").strip()
+    
+    if not text:
+        empty_fig = go.Figure(); empty_fig.update_layout(height=250)
+        return empty_fig, empty_fig, pd.DataFrame(), [], "Please enter text to analyze."
+
+    
+    result = analyze_text_actual(text)
+
+    overall = result.get("overall_score", 0.0)
+    signals_data = result.get("signals", {})
+    emotions_data = result.get("emotions", {})
+    highlights_data = result.get("highlights", [])
+    explanation_text = result.get("explanation", "")
+
+    gauge_plot = create_gauge_chart(overall)
+    radar_plot = create_radar_chart(emotions_data)
+
+    signals_df = pd.DataFrame(
+        [{"Signal Type": k, "Score": f"{v:.2f}"} for k, v in signals_data.items()]
+    ).sort_values("Signal Type")
+
+    return gauge_plot, radar_plot, signals_df, highlights_data, explanation_text
+# ==========================================
+# 5. Launch App
+# ==========================================
+if __name__ == "__main__":
+    demo.launch(theme=theme, inbrowser=True, share=False, debug=True)
