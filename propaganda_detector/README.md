@@ -62,7 +62,7 @@ If you want to recreate the model, you can choose one of the following options
 python download_model.py
 ```
 
-Downloads the fine-tuned DistilBERT v2 model (~236 MB) from GitHub Releases into `models/distilbert_model_v2/distilbert_model`.
+Downloads the fine-tuned DistilBERT v2 model (~236 MB) from GitHub Releases into `models/distilbert_model`.
 
 ### Option B — Train from scratch
 
@@ -94,7 +94,7 @@ The `--ptc-dir` flag merges ~14,000 PTC v2 propaganda sentences into training, i
 
 ```bash
 # DistilBERT (most accurate)
-python main.py --model-type transformer --model distilbert_model_v2/distilbert_model --text "Your text here"
+python main.py --model-type transformer --model distilbert_model --text "Your text here"
 
 # Fast sklearn fallback
 python main.py --text "Your text here"
@@ -103,7 +103,7 @@ python main.py --text "Your text here"
 ### Interactive mode
 
 ```bash
-python main.py --model-type transformer --model distilbert_model_v2/distilbert_model --interactive
+python main.py --model-type transformer --model distilbert_model --interactive
 ```
 
 Type or paste text at the `Text>` prompt. Enter `quit` to exit.

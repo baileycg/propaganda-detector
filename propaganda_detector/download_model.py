@@ -67,7 +67,7 @@ def extract_zip(zip_path: Path, dest_dir: Path) -> None:
 
 
 def main() -> None:
-    model_dir = MODELS_DIR / "distilbert_model_v2" / "distilbert_model"
+    model_dir = MODELS_DIR / "distilbert_model"
 
     if model_dir.exists() and (model_dir / "model.safetensors").exists():
         print(f"Model already exists at {model_dir}")
@@ -90,7 +90,7 @@ def main() -> None:
     zip_path.unlink()
     print(f"\nModel ready at: {model_dir}")
     print("Run predictions with:")
-    print('  python main.py --model-type transformer --model distilbert_model_v2/distilbert_model --interactive')
+    print('  python main.py --model-type transformer --model distilbert_model --interactive')
 
 
 if __name__ == "__main__":
